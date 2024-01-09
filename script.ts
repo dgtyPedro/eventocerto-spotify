@@ -1,6 +1,6 @@
 import { Router, Request, Response } from "express";
 import { randomUUID } from "crypto";
-import { matchGenres } from "./genres";
+import { matchGenre } from "./genres";
 
 require("dotenv").config();
 const express = require("express");
@@ -57,8 +57,6 @@ app.get("/callback", async (req: Request, res: Response) => {
 
     const result: any = await response.json();
 
-    console.log(result);
-
     res.redirect(
       "/user/info?" +
         querystring.stringify({
@@ -90,11 +88,16 @@ app.get("/user/info", async (req: Request, res: Response) => {
     const listenedArtists: string[] = [];
     result.items.map((artist: any) => {
       listenedArtists.push(artist.name);
-      listenedGenres.push(...artist.genres);
-      return {
-        name: artist.name,
-        genre: artist.genres,
-      };
+      artist.genres.map((genre: any) => {
+        const parsedGenres = genre.replaceAll("-", " ").split(" ");
+        for (var i = 0; i < parsedGenres.length; i++) {
+          const parsedGenre = matchGenre(parsedGenres[i]);
+          if (parsedGenre) {
+            listenedGenres.push(parsedGenre);
+            return;
+          }
+        }
+      });
     });
     let genreCount: Record<string, number> = {};
     listenedGenres.map((genre: string) => {
@@ -114,14 +117,14 @@ app.get("/user/info", async (req: Request, res: Response) => {
         ((count * 100) / listenedGenres.length).toFixed(2) + "%";
     });
 
+    console.log(sortedListenedGenres);
+
     const userInfo = {
       artists: listenedArtists,
       genres: sortedListenedGenres,
     };
 
     res.send(userInfo);
-
-    matchGenres(Object.keys(userInfo.genres));
   } catch (error: any) {
     res.send(error.toString());
   }
