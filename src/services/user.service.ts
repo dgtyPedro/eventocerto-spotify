@@ -3,6 +3,7 @@ import { randomUUID } from "crypto";
 import querystring from "querystring";
 import { matchGenre } from "../utils/genres.util";
 import { scope } from "../config/spotify.config";
+import { Artist, NoOpErrorHandler, Page } from "@spotify/web-api-ts-sdk";
 
 require("dotenv").config();
 
@@ -38,12 +39,12 @@ export const GetUser = async (req: Request, res: Response) => {
       throw new Error(`HTTP error! Status: ${response.status}`);
     }
 
-    const result: any = await response.json();
+    const result: Page<Artist> = (await response.json()) as Page<Artist>;
     const listenedGenres: string[] = [];
     const listenedArtists: string[] = [];
-    result.items.map((artist: any) => {
+    result.items.map((artist: Artist) => {
       listenedArtists.push(artist.name);
-      artist.genres.map((genre: any) => {
+      artist.genres.map((genre: string) => {
         const parsedGenres = genre.replaceAll("-", " ").split(" ");
         for (var i = 0; i < parsedGenres.length; i++) {
           const parsedGenre = matchGenre(parsedGenres[i]);

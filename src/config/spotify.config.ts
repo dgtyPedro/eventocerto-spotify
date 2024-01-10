@@ -1,3 +1,4 @@
+import { AccessToken } from "@spotify/web-api-ts-sdk";
 import { Request, Response } from "express";
 import querystring from "querystring";
 
@@ -33,8 +34,9 @@ export const callback = async (req: Request, res: Response) => {
       },
     });
 
-    const result: any = await response.json();
+    const result: AccessToken = (await response.json()) as AccessToken;
 
+    console.log(result);
     res.redirect(
       "/api/v1/user?" +
         querystring.stringify({
