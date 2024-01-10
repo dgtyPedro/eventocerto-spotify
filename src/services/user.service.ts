@@ -1,16 +1,13 @@
-import { Router, Request, Response } from "express";
+import { Request, Response } from "express";
 import { randomUUID } from "crypto";
-import { matchGenre } from "./genres";
+import querystring from "querystring";
+import { matchGenre } from "../utils/genres.util";
+import { scope } from "../config/spotify.config";
 
 require("dotenv").config();
-const express = require("express");
-const querystring = require("querystring");
-const app = express();
-const port = 3000;
 
-app.get("/login", function (_req: Request, res: Response) {
+export const AuthUser = (_req: Request, res: Response) => {
   var state = randomUUID();
-  var scope = "user-read-private user-read-email user-top-read";
 
   res.redirect(
     "https://accounts.spotify.com/authorize?" +
@@ -22,51 +19,9 @@ app.get("/login", function (_req: Request, res: Response) {
         state: state,
       })
   );
-});
+};
 
-app.get("/callback", async (req: Request, res: Response) => {
-  const code = req.query.code || "";
-  const state = req.query.state || null;
-
-  if (state === null) {
-    res.redirect(
-      "/#" +
-        querystring.stringify({
-          error: "state_mismatch",
-        })
-    );
-  } else {
-    const response = await fetch("https://accounts.spotify.com/api/token", {
-      method: "POST",
-      body: new URLSearchParams({
-        grant_type: "authorization_code",
-        code: code.toString(),
-        redirect_uri: "http://localhost:3000/callback",
-      }),
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
-        Authorization:
-          "Basic " +
-          Buffer.from(
-            (process.env.CLIENT_ID || "") +
-              ":" +
-              (process.env.CLIENT_SECRET || "")
-          ).toString("base64"),
-      },
-    });
-
-    const result: any = await response.json();
-
-    res.redirect(
-      "/user/info?" +
-        querystring.stringify({
-          access_token: result.access_token,
-        })
-    );
-  }
-});
-
-app.get("/user/info", async (req: Request, res: Response) => {
+export const GetUser = async (req: Request, res: Response) => {
   var accessToken = req.query.access_token || null;
   try {
     const response = await fetch(
@@ -117,8 +72,6 @@ app.get("/user/info", async (req: Request, res: Response) => {
         ((count * 100) / listenedGenres.length).toFixed(2) + "%";
     });
 
-    console.log(sortedListenedGenres);
-
     const userInfo = {
       artists: listenedArtists,
       genres: sortedListenedGenres,
@@ -128,8 +81,4 @@ app.get("/user/info", async (req: Request, res: Response) => {
   } catch (error: any) {
     res.send(error.toString());
   }
-});
-
-app.listen(port, () => {
-  console.log(`Example app listening on port ${port}`);
-});
+};
