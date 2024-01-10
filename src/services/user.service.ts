@@ -3,7 +3,7 @@ import { randomUUID } from "crypto";
 import querystring from "querystring";
 import { matchGenre } from "../utils/genres.util";
 import { scope } from "../config/spotify.config";
-import { Artist, NoOpErrorHandler, Page } from "@spotify/web-api-ts-sdk";
+import { Artist, Page } from "@spotify/web-api-ts-sdk";
 
 require("dotenv").config();
 

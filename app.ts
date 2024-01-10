@@ -1,5 +1,5 @@
 import express from "express";
-import { Router, Request, Response } from "express";
+import { Request, Response } from "express";
 import { callback } from "./src/config/spotify.config";
 
 const app = express();
